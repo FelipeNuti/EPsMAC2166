@@ -46,9 +46,79 @@ int main()
     int verborragico;
     verborragico = FALSE;
     printf("Modos de operacao:\n1.Codificacao\n2.Decodifica\n3.Ler texto\n4.Modo verborragico (toggle)\n");
-    scanf("%d", &op);
+    scanf("%d[^\n]", &op);
     
-    while (op != 0)
+    while (op != 0){
+        if (op == 1)
+        {
+            printf("Nome do arquivo de imagem: ");
+            scanf(" [^\n]");
+            char nomearqD[FNMAX];
+            
+            scanf("%[^\n][^\n]", nomearqD);
+
+
+            char nomearqT[FNMAX];
+            printf("Nome do arquivo de texto: ");
+            scanf(" ");
+            scanf("%[^\n][^\n]",  nomearqT);
+
+
+            char nomearqDl[FNMAX];
+            printf("Nome do arquivo que armazenara a imagem resultante: ");
+            scanf(" ");
+            scanf("%[^\n][^\n]", nomearqDl);
+
+
+            printf("Guardei os nomes\n");
+
+            int m, n, max, k;
+            int D[MAX][MAX];
+            char T[MAX2];
+
+            LeDesenho(nomearqD, D, &m, &n, &max);
+            printf("Li desenho\n");
+            LeTexto(nomearqT, T, &k);
+            printf("Li texto\n");
+
+            int b, d;
+
+            BeDe(k , m, n, &b, &d);
+            printf("Achei b e d: b = %d\nd = %d\n", b, d);
+
+            int Dl[MAX][MAX];
+            int maxl;
+
+            maxl = Maximo(Dl, m, n);
+            printf("Achei o maximo de Dl\n");
+            maxl = max + maxl - min(max, maxl); /* ou seja, o maximo para a imagem codificada eh o maximo entre o maximo de D e de Dl*/
+
+            Codifica(D, m, n, T, k, Dl, b, d, verborragico);
+            printf("Codifiquei a mensagem\n");
+            EscreveDesenho(nomearqDl, Dl, m, n, maxl);
+            printf("Escrevi o arquivo\n");
+        }
+
+        else if (op == 2)
+        {
+
+        }
+
+        else if (op == 3)
+        {
+
+        }
+
+        else if (op == 4)
+        {
+            verborragico = !verborragico; /*troca de modo de operação*/ 
+        }
+
+        printf("Modos de operacao:\n1.Codificacao\n2.Decodifica\n3.Ler texto\n4.Modo verborragico (toggle)\n");
+        scanf("%d", &op);
+    }
+
+    return 0;
 }
 
 int LeDesenho( char nomearq[FNMAX], int M[MAX][MAX],
@@ -61,7 +131,7 @@ int LeDesenho( char nomearq[FNMAX], int M[MAX][MAX],
         return 1;
     }
 
-    fscanf(fp, "P2\n%d %d\n%d", pm, pn, pmax);
+    fscanf(fp, "P2\n%d %d\n%d\n", pm, pn, pmax);
 
     int i, j;
 
@@ -69,9 +139,10 @@ int LeDesenho( char nomearq[FNMAX], int M[MAX][MAX],
     {
         for (j = 0; j < *pn; j++)
         {
-            fscanf(fp, "%d", &M[i][j]);
+            fscanf(fp, "%d ", &M[i][j]);
         }
     }
+    fclose(fp);
 
     return 0;
 
@@ -86,17 +157,21 @@ int LeTexto( char nomearq[FNMAX], char T[MAX2], int *pk )
         return 1;
     }
 
-    int i = -1;
-    char atual = '0';
-
-    do
+    int i = 0;
+    char atual;
+    while (fscanf(fp, "%c", &atual) && atual != '\n' && (i + 1) < MAX2)
     {
-        fscanf(fp, "%c", &atual);
-        i++;
         T[i] = atual;
+        printf("%c", T[i]);
+        i++;
+    }
+    printf("\n");
 
-    } while (atual != '\0');
+    T[i] = '\0';
+    printf("k  = %d\n", i);
     *pk = i;
+    fclose(fp);
+    return 0;
 }
 
 int min(int a, int b)
@@ -121,9 +196,11 @@ int BeDe( int k, int m, int n, int *pb, int *pd )
 
     while (exp < 4)
     {
-        if ((m * n - 1) * 1<<exp >= 8 * k)
+        printf("Meu chute de b eh %d\n", 1<<exp);
+        printf("%d >= %d\n", (m * n - 1) * (1<<exp), 8*k);
+        if (((m * n - 1) * (1<<exp)) >= 8 * k)
         {
-            *pb = 1<<exp;
+            *pb = (1<<exp);
             break;
         }
         exp++;
@@ -189,7 +266,7 @@ int ProximosBBits(char T[MAX2], int b, int *pik, int *pib)
 
 int acha_z(int x, int y, int b)
 {
-    return x>>b<<b + (x+y)%(1<<b); /*x>>b<<b eh o maior multiplo de 2^b menor ou igual a x.
+    return (x>>b)<<b + ((x+y)%(1<<b)); /*x>>b<<b eh o maior multiplo de 2^b menor ou igual a x.
     1<<b vale 2^b*/ 
 }
 
@@ -210,13 +287,13 @@ void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
             Dl[i][j] = D[i][j];
         }
     }
+    printf("Copiei\n");
 
     i = d-1;
     j = d-1; /*como estipulado no enunciado*/
 
-    Dl[i][j] = b; /*coloca o valor de b no primeiro pixel; no enunciado ha ambiguidade sobre se eh
-    preciso codificar b E d nesse pixel; no inicio diz-se uma coisa, mas mais a frente diz-se outra.
-    Como d pode ser muito grande, isso poderia desorganizar a codificacao*/
+    Dl[i][j] = acha_z(D[i][j], b, b); /*coloca o valor de b no primeiro pixel*/
+    printf("Codifiquei b\n");
     
     int K, descarte; 
     K = 0; /*para iterar pelos caracteres de T*/
@@ -228,6 +305,7 @@ void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
         {
             int y;
             y = ProximosBBits(T, b, &K, &descarte);
+            /*printf("Achei o comeco dos proximos b bits b\n");*/
             Dl[i][j] = acha_z(D[i][j], y, b);
             if (modo) 
             {
@@ -298,7 +376,18 @@ void DeBeDe( int D[MAX][MAX], int Dl[MAX][MAX],
     }
 
     *pd = d;
-    *pb = Dl[d-1][d-1];
+
+    int b = 1;
+
+    for (; b <=8; b *= 2)
+    {
+        if (acha_y(D[d-1][d-1], Dl[d-1][d-1], b) == b) /* resolve a equacao b = (z-x mod 2^b)*/
+        {
+            *pb = b;
+            break;
+        }
+    }
+
 }
 
 int DeCodifica( int D[MAX][MAX], int Dl[MAX][MAX], int m, int n,
