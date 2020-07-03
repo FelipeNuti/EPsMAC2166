@@ -17,7 +17,7 @@ int BeDe( int k, int m, int n, int *pb, int *pd );
 void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
                 int Dl[MAX][MAX], int b, int d, int modo );
 
-int Maximo( int D[MAX][MAX], int m, int n );
+int Maximo(int D[MAX][MAX], int m, int n );
 
 int EscreveDesenho( char nomearq[FNMAX], int M[MAX][MAX],
 int m, int n, int max );
@@ -76,11 +76,12 @@ int main()
             int D[MAX][MAX];
             char T[MAX2];
 
+            k = 0;
+
             LeDesenho(nomearqD, D, &m, &n, &max);
-            printf("Li desenho\n");
+            printf("Li desenho\nm = %d\n n = %d\n", m, n);
             LeTexto(nomearqT, T, &k);
             printf("Li texto\n");
-
             int b, d;
 
             BeDe(k , m, n, &b, &d);
@@ -89,11 +90,10 @@ int main()
             int Dl[MAX][MAX];
             int maxl;
 
+            Codifica(D, m, n, T, k, Dl, b, d, verborragico);
             maxl = Maximo(Dl, m, n);
             printf("Achei o maximo de Dl\n");
             maxl = max + maxl - min(max, maxl); /* ou seja, o maximo para a imagem codificada eh o maximo entre o maximo de D e de Dl*/
-
-            Codifica(D, m, n, T, k, Dl, b, d, verborragico);
             printf("Codifiquei a mensagem\n");
             EscreveDesenho(nomearqDl, Dl, m, n, maxl);
             printf("Escrevi o arquivo\n");
@@ -131,7 +131,7 @@ int LeDesenho( char nomearq[FNMAX], int M[MAX][MAX],
         return 1;
     }
 
-    fscanf(fp, "P2\n%d %d\n%d\n", pm, pn, pmax);
+    fscanf(fp, "P2\n%d %d\n%d\n", pn, pm, pmax);
 
     int i, j;
 
@@ -159,17 +159,18 @@ int LeTexto( char nomearq[FNMAX], char T[MAX2], int *pk )
 
     int i = 0;
     char atual;
-    while (fscanf(fp, "%c", &atual) && atual != '\n' && (i + 1) < MAX2)
+    int count = 0;
+    while (fscanf(fp, "%c", &atual) > NULL && count < 3 && (i + 1) < MAX2)
     {
+        if (atual == '\n') count++;
+        if (count == 2 && atual != '\n') count = 0;
         T[i] = atual;
         printf("%c", T[i]);
         i++;
-    }
+    } 
     printf("\n");
-
-    T[i] = '\0';
-    printf("k  = %d\n", i);
     *pk = i;
+    printf("k  = %d\n", *pk);
     fclose(fp);
     return 0;
 }
@@ -266,13 +267,13 @@ int ProximosBBits(char T[MAX2], int b, int *pik, int *pib)
 
 int acha_z(int x, int y, int b)
 {
-    return (x>>b)<<b + ((x+y)%(1<<b)); /*x>>b<<b eh o maior multiplo de 2^b menor ou igual a x.
+    return (int) ((x/(1<<b))*(1<<b) + ((x+y)%(1<<b)))%256; /*x>>b<<b eh o maior multiplo de 2^b menor ou igual a x.
     1<<b vale 2^b*/ 
 }
 
 int acha_y(int x, int z, int b)
 {
-    return (z-x+256) % (1<<b);
+    return (z-x+256+256) % (1<<b);
 }
 
 void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
@@ -294,18 +295,24 @@ void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
 
     Dl[i][j] = acha_z(D[i][j], b, b); /*coloca o valor de b no primeiro pixel*/
     printf("Codifiquei b\n");
+    j+=d;
     
     int K, descarte; 
     K = 0; /*para iterar pelos caracteres de T*/
     descarte = 0; /*numero de bits a serem descartados num caracter de T*/
 
-    for (i = d - 1; i < m; i+= d)
+    for (;i < m; i+= d)
     {
-        for (j = 2*d - 1; j < n; j+= d)
+        if (i!=d-1) j = d-1;
+        for (; j < n; j+= d)
         {
             int y;
             y = ProximosBBits(T, b, &K, &descarte);
             /*printf("Achei o comeco dos proximos b bits b\n");*/
+            if (y < 0 || acha_y(D[i][j], y, b) < 0){
+                printf("O erro está no %c, no bit %d\n", T[K], descarte);
+                return;
+            }
             Dl[i][j] = acha_z(D[i][j], y, b);
             if (modo) 
             {
@@ -326,9 +333,11 @@ int Maximo( int D[MAX][MAX], int m, int n )
     {
         for (j = 0; j < n; j++)
         {
-            if (D[i][j]>max) max = D[i][j];
+            if (D[i][j]> max) max = D[i][j];
         }
     }
+    printf("O maximo eh %d\n", max);
+    return max;
 }
 
 int EscreveDesenho( char nomearq[FNMAX], int M[MAX][MAX],
@@ -341,7 +350,7 @@ int EscreveDesenho( char nomearq[FNMAX], int M[MAX][MAX],
         return 1;
     }
 
-    fprintf(fp, "P2\n%d %d\n%d\n", m, n, max);
+    fprintf(fp, "P2\n%d %d\n%d\n", n, m, max);
 
     int i, j; /*iteradores*/
 
@@ -350,12 +359,13 @@ int EscreveDesenho( char nomearq[FNMAX], int M[MAX][MAX],
         for (j = 0; j < n; j++)
         {
             fprintf(fp, "%d", M[i][j]);
-            if (j != n-1)
+            /*if (j != n-1)
             {
                 fprintf(fp, " ");
-            }
+            }*/
+            fprintf(fp, "\n");
         }
-        fprintf(fp, "\n");
+        
     }
 
     return 0;
@@ -437,4 +447,5 @@ int EscreveTexto( char nomearq[FNMAX], char T[MAX2], int k )
         return 1;
     }
     fprintf(fp, "%s", T);
+    return 0;
 }
