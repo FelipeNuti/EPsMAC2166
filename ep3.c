@@ -101,6 +101,40 @@ int main()
 
         else if (op == 2)
         {
+            printf("Nome do arquivo que contem o desenho original: ");
+            scanf(" [^\n]");
+            char nomearqD[FNMAX];
+            
+            scanf("%[^\n][^\n]", nomearqD);
+
+
+            char nomearqDl[FNMAX];
+            printf("Nome do arquivo que contem o desenho esteganografado: ");
+            scanf(" ");
+            scanf("%[^\n][^\n]",  nomearqDl);
+
+
+            char nomearqT[FNMAX];
+            printf("Nome do arquivo que armazenara a mensagem decodificada: ");
+            scanf(" ");
+            scanf("%[^\n][^\n]", nomearqT);
+
+            int m=0, n=0, max=0, k=0, b=0, d=0;
+            int D[MAX][MAX];
+            int Dl[MAX][MAX];
+            char T[MAX2];
+
+            LeDesenho(nomearqD, D, &m, &n, &max);
+            LeDesenho(nomearqDl, Dl, &m, &n, &max);
+
+            DeBeDe(D, Dl, m, n, &b, &d);
+            printf("m = %d\nn = %d\nb = %d\nd = %d\n", m, n, b, d);
+            
+
+            k = DeCodifica(D, Dl, m, n, b, d, T, verborragico);
+            printf("k = %d\n", k);
+
+            EscreveTexto(nomearqT, T, k);
 
         }
 
@@ -273,7 +307,7 @@ int acha_z(int x, int y, int b)
 
 int acha_y(int x, int z, int b)
 {
-    return (z-x+256+256) % (1<<b);
+    return (int) (z-x+256+256) % (1<<b);
 }
 
 void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
@@ -406,27 +440,29 @@ int DeCodifica( int D[MAX][MAX], int Dl[MAX][MAX], int m, int n,
     int i, j; /*indices para iterar pelas matrizes*/;
 
     i = d-1;
-    j = d-1; /*como estipulado no enunciado*/
+    j = 2*d-1; /*como estipulado no enunciado*/
 
     int k, bits_ate_agr; 
     k = 0; /*para iterar pelos caracteres de T*/
     bits_ate_agr = 0; /*numero de bits ja colocados num caracter de T*/
     char c = 0; /*caractere do texto comeca com valor zero em binario*/
 
-    for (i = d - 1; i < m; i+= d)
+    for (;i < m; i+= d)
     {
-        for (j = 2*d - 1; j < n; j+= d)
+        if (i!=d-1) j = d-1;
+        for (; j < n; j+= d)
         {
             int y;
             y = acha_y(D[i][j], Dl[i][j], b);
-            c = c << b | y; /*desloca os algarismos (em binario) de c de b unidades para a direita e coloca os b algarismos lidos no espaco gerado*/
+            c = (c  | (y << bits_ate_agr)); /*desloca os algarismos (em binario) de c de b unidades para a direita e coloca os b algarismos lidos no espaco gerado*/
             bits_ate_agr += b;
             if (modo) 
             {
-                printf("Posicao [%d, %d]; Inteiro codificado: %d; Tom de cinza original: %02x; Tom de cinza codificado: %02x\n", i, j, y, D[i][j], Dl[i][j]);
+                if (0 ) printf("Posicao [%d, %d]; Inteiro codificado: %d; Tom de cinza original: %02x; Tom de cinza codificado: %02x\n", i, j, y, D[i][j], Dl[i][j]);
+                 if (0 ) printf("c ateh agr = %c\n\n", c);
             }
 
-            if (bits_ate_agr == 8)
+            if (bits_ate_agr >= 8)
             {
                 bits_ate_agr = 0;
                 T[k] = c;
@@ -446,6 +482,12 @@ int EscreveTexto( char nomearq[FNMAX], char T[MAX2], int k )
         printf("Erro ao abrir o arquivo %s\n", nomearq);
         return 1;
     }
-    fprintf(fp, "%s", T);
+
+    int l = 0;
+
+    for (; l < k; l++)
+    {
+        if (T[l] > 0) fprintf(fp, "%c", T[l]);
+    }
     return 0;
 }
