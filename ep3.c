@@ -192,20 +192,18 @@ int LeTexto( char nomearq[FNMAX], char T[MAX2], int *pk )
     }
 
     int i = 0;
-    char atual;
-    int count = 0;
-    while (fscanf(fp, "%c", &atual) > NULL && count < 3 && (i + 1) < MAX2)
+    char atual = 'a';
+    while (fscanf(fp, "%c", &atual) == 1)
     {
-        if (atual == '\n') count++;
-        if (count == 2 && atual != '\n') count = 0;
         T[i] = atual;
-        printf("%c", T[i]);
+        printf("%d ", T[i]);
         i++;
     } 
+    fclose(fp);
     printf("\n");
     *pk = i;
     printf("k  = %d\n", *pk);
-    fclose(fp);
+    
     return 0;
 }
 
