@@ -1,0 +1,24 @@
+mkdir c_test
+rm -r c_test
+mkdir c_test
+mac2166 ex.o ep3.c
+source file_cmp.bash
+cp ep3_GNULinux ex.o img1.pgm lusiadas.txt test_input test_input_2 test_compat c_test
+cd c_test
+
+touch output_img.pgm
+touch output_dec.txt
+touch teste_lusiadas.txt
+touch output_lusiadas.pgm
+touch output_dec_2.txt
+
+
+./ex.o < test_input
+./ep3_GNULinux < test_compat
+./ex.o < test_input_2
+
+fcmp lusiadas.txt output_dec.txt
+fcmp teste_lusiadas.txt output_dec.txt
+fcmp output_dec_2.txt teste_lusiadas.txt
+
+cd ..

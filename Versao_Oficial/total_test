@@ -1,0 +1,19 @@
+mkdir t_test
+rm -r t_test
+mkdir t_test
+source file_cmp.bash
+cp ep3_GNULinux img1.pgm lusiadas.txt test_input t_test
+cd t_test
+
+touch output_img.pgm
+touch output_dec.txt
+
+
+./ep3_GNULinux < test_input
+
+fcmp lusiadas.txt output_dec.txt
+
+cd ..
+
+
+

@@ -45,19 +45,13 @@ int main()
     int op;
     int verborragico;
     verborragico = FALSE;
-    /*Pede entrada conforme o executavel oficial*/
-    printf("Digite a operacao desejada:\n   1. Codificar\n   2. Decodificar\n   3. Mostrar mensagem\n"); 
-    printf("   4. ");
-    if (!verborragico) printf("Ativar ");
-    else  printf("Destivar ");
-    printf("modo verborragico (toggle)\n   0. Finalinzar\n\nOPCAO: ");
+    printf("Modos de operacao:\n1.Codificacao\n2.Decodifica\n3.Ler texto\n4.Modo verborragico (toggle)\n");
     scanf("%d[^\n]", &op);
     
     while (op != 0){
         if (op == 1)
         {
-            /*leitura dos nomes, atentando para trailing characters que podem gerar bugs na leitura*/
-            printf("Arquivo que contem o desenho original: ");
+            printf("Nome do arquivo de imagem: ");
             scanf(" [^\n]");
             char nomearqD[FNMAX];
             
@@ -65,15 +59,18 @@ int main()
 
 
             char nomearqT[FNMAX];
-            printf("Arquivo que contem a mensagem a ser ocultada: ");
+            printf("Nome do arquivo de texto: ");
             scanf(" ");
             scanf("%[^\n][^\n]",  nomearqT);
 
 
             char nomearqDl[FNMAX];
-            printf("Gravar desenho esteganografado em: ");
+            printf("Nome do arquivo que armazenara a imagem resultante: ");
             scanf(" ");
             scanf("%[^\n][^\n]", nomearqDl);
+
+
+            printf("Guardei os nomes\n");
 
             int m, n, max, k;
             int D[MAX][MAX];
@@ -81,23 +78,26 @@ int main()
 
             k = 0;
 
-            if (!LeDesenho(nomearqD, D, &m, &n, &max) /*leitura dos arquivos e interrupcao da execucao em caso de erro*/
+            if (!LeDesenho(nomearqD, D, &m, &n, &max) 
             && !LeTexto(nomearqT, T, &k))
             {
+                printf("Li desenho\nm = %d\n n = %d\n", m, n);
+                printf("Li texto\n");
                 int b, d;
-                printf("m = %d n = %d\n", m, n);
+
                 BeDe(k , m, n, &b, &d);
-                
-                printf(" b = %d\n d = %d\n", b, d);
+                printf("Achei b e d: b = %d\nd = %d\n", b, d);
 
                 int Dl[MAX][MAX];
                 int maxl;
 
                 Codifica(D, m, n, T, k, Dl, b, d, verborragico);
-                printf("k = %d\n", k);
                 maxl = Maximo(Dl, m, n);
+                printf("Achei o maximo de Dl\n");
                 maxl = max + maxl - min(max, maxl); /* ou seja, o maximo para a imagem codificada eh o maximo entre o maximo de D e de Dl*/
+                printf("Codifiquei a mensagem\n");
                 EscreveDesenho(nomearqDl, Dl, m, n, maxl);
+                printf("Escrevi o arquivo\n");
             }
         }
 
@@ -126,26 +126,18 @@ int main()
             int Dl[MAX][MAX];
             char T[MAX2];
 
-            if (!LeDesenho(nomearqD, D, &m, &n, &max))
-            {   printf("Arquivo que contem o desenho original: m = %d n = %d\n", m, n); /*impressoes conforme pede o enunciado*/
-                int cm = m, cn = n;
-                if (!LeDesenho(nomearqDl, Dl, &m, &n, &max))
-                {
-                    printf("Arquivo que contem o desenho esteganografado: m = %d n = %d\n", m, n); 
-                    if (m != cm || n != cn)
-                    {
-                        printf("Dimensoes dos desenhos sao incompativeis\n");
-                    }
-                    else
-                    {
-                        DeBeDe(D, Dl, m, n, &b, &d);
-                    
-                        k = DeCodifica(D, Dl, m, n, b, d, T, verborragico);
-                        printf("k = %d\n", k);
+            if (!LeDesenho(nomearqD, D, &m, &n, &max) && 
+            !LeDesenho(nomearqDl, Dl, &m, &n, &max))
+            {
 
-                        EscreveTexto(nomearqT, T, k);
-                    }
-                }
+                DeBeDe(D, Dl, m, n, &b, &d);
+                printf("m = %d\nn = %d\nb = %d\nd = %d\n", m, n, b, d);
+                
+
+                k = DeCodifica(D, Dl, m, n, b, d, T, verborragico);
+                printf("k = %d\n", k);
+
+                EscreveTexto(nomearqT, T, k);
             }
 
         }
@@ -161,14 +153,14 @@ int main()
 
             if (!LeTexto(nomearqT, T, &k))
             {
-                printf("MENSAGEM contida no arquivo output_dec.txt (tudo entre ---> e <---)\n--->");
+
                 while (count < k)
                 {
                     printf("%c", T[count]);
                     count++;
                 }
 
-                printf("<---\n");
+                printf("\n");
             }
 
             
@@ -180,11 +172,7 @@ int main()
             verborragico = !verborragico; /*troca de modo de operação*/ 
         }
 
-        printf("Digite a operacao desejada:\n   1. Codificar\n   2. Decodificar\n   3. Mostrar mensagem\n");
-    printf("   4. ");
-    if (!verborragico) printf("Ativar ");
-    else  printf("Destivar ");
-    printf("modo verborragico (toggle)\n   0. Finalinzar\n\nOPCAO: ");
+        printf("Modos de operacao:\n1.Codificacao\n2.Decodifica\n3.Ler texto\n4.Modo verborragico (toggle)\n");
         scanf("%d", &op);
     }
 
@@ -201,7 +189,7 @@ int LeDesenho( char nomearq[FNMAX], int M[MAX][MAX],
         return 1;
     }
 
-    fscanf(fp, "P2\n%d %d\n%d\n", pn, pm, pmax); /*leitura do "cabecalho"*/
+    fscanf(fp, "P2\n%d %d\n%d\n", pn, pm, pmax);
 
     int i, j;
 
@@ -209,7 +197,7 @@ int LeDesenho( char nomearq[FNMAX], int M[MAX][MAX],
     {
         for (j = 0; j < *pn; j++)
         {
-            fscanf(fp, "%d ", &M[i][j]); /*leitura de cada pixel da imagem*/
+            fscanf(fp, "%d ", &M[i][j]);
         }
     }
     fclose(fp);
@@ -228,8 +216,8 @@ int LeTexto( char nomearq[FNMAX], char T[MAX2], int *pk )
     }
 
     int i = 0;
-    char atual = 'a';  /*inicializacao de "atual" com um caracter qualquer*/
-    while (fscanf(fp, "%c", &atual) == 1) /*condicao de parada: ler um caracter; caso contratio, eh porque o arquivo ja acabou*/
+    char atual = 'a';
+    while (fscanf(fp, "%c", &atual) == 1)
     {
         T[i] = atual;
         i++;
@@ -237,6 +225,7 @@ int LeTexto( char nomearq[FNMAX], char T[MAX2], int *pk )
     fclose(fp);
     printf("\n");
     *pk = i;
+    printf("k  = %d\n", *pk);
     
     return 0;
 }
@@ -263,6 +252,8 @@ int BeDe( int k, int m, int n, int *pb, int *pd )
 
     while (exp < 4)
     {
+        printf("Meu chute de b eh %d\n", 1<<exp);
+        printf("%d >= %d\n", (m * n - 1) * (1<<exp), 8*k);
         if (((m * n - 1) * (1<<exp)) >= 8 * k)
         {
             *pb = (1<<exp);
@@ -337,7 +328,7 @@ int acha_z(int x, int y, int b)
 
 int acha_y(int x, int z, int b)
 {
-    return (int) (z-x+256) % (1<<b);
+    return (int) (z-x+256+256) % (1<<b);
 }
 
 void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
@@ -352,11 +343,13 @@ void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
             Dl[i][j] = D[i][j];
         }
     }
+    printf("Copiei\n");
 
     i = d-1;
     j = d-1; /*como estipulado no enunciado*/
 
     Dl[i][j] = acha_z(D[i][j], b, b); /*coloca o valor de b no primeiro pixel*/
+    printf("Codifiquei b\n");
     j+=d;
     
     int K, descarte; 
@@ -365,19 +358,20 @@ void Codifica( int D[MAX][MAX], int m, int n, char T[MAX2], int k,
 
     for (;i < m; i+= d)
     {
-        if (i!=d-1) j = d-1; /*reinicializar j de forma adequada, ja que o primeiro pixel de ocultacao da 1a linha utilizada contem b*/
+        if (i!=d-1) j = d-1;
         for (; j < n; j+= d)
         {
             int y;
             y = ProximosBBits(T, b, &K, &descarte);
+            /*printf("Achei o comeco dos proximos b bits b\n");*/
             if (y < 0 || acha_y(D[i][j], y, b) < 0){
-                printf("Erro no caracter %c, no bit %d\n", T[K], descarte);
+                printf("O erro está no %c, no bit %d\n", T[K], descarte);
                 return;
             }
             Dl[i][j] = acha_z(D[i][j], y, b);
             if (modo) 
             {
-                printf(" (%d,%d) bits %d original %02x codificado %02x\n", i, j, y, D[i][j], Dl[i][j]);
+                printf("Posicao [%d, %d]; Inteiro codificado: %d; Tom de cinza original: %02x; Tom de cinza codificado: %02x\n", i, j, y, D[i][j], Dl[i][j]);
             }
         }
     }
@@ -397,6 +391,7 @@ int Maximo( int D[MAX][MAX], int m, int n )
             if (D[i][j]> max) max = D[i][j];
         }
     }
+    printf("O maximo eh %d\n", max);
     return max;
 }
 
@@ -419,6 +414,10 @@ int EscreveDesenho( char nomearq[FNMAX], int M[MAX][MAX],
         for (j = 0; j < n; j++)
         {
             fprintf(fp, "%d", M[i][j]);
+            /*if (j != n-1)
+            {
+                fprintf(fp, " ");
+            }*/
             fprintf(fp, "\n");
         }
         
@@ -436,9 +435,9 @@ void DeBeDe( int D[MAX][MAX], int Dl[MAX][MAX],
 
     for (i = 0; i < m && i < n; i++)
     {
-        if (i < d && Dl[i][i] != D[i][i])   /*vai testando se os desenhos tem valores diferentes na "diagonal principal", e o menor valor eh o valor de d*/
+        if (i < d && Dl[i][i] != D[i][i])
         {
-            d = i+1;                        
+            d = i+1;
         }
     }
 
@@ -481,17 +480,16 @@ int DeCodifica( int D[MAX][MAX], int Dl[MAX][MAX], int m, int n,
             bits_ate_agr += b;
             if (modo) 
             {
-                if (1) printf(" (%d,%d) bits %d original %02x codificado %02x\n", i, j, y, D[i][j], Dl[i][j]);
+                if (0 ) printf("Posicao [%d, %d]; Inteiro codificado: %d; Tom de cinza original: %02x; Tom de cinza codificado: %02x\n", i, j, y, D[i][j], Dl[i][j]);
+                 if (0 ) printf("c ateh agr = %c\n\n", c);
             }
 
-            if (bits_ate_agr == 8)
+            if (bits_ate_agr >= 8)
             {
                 bits_ate_agr = 0;
                 T[k] = c;
-                if (c == '\0') break;
                 c = 0;
                 k++;
-                /*printf("%d\n", k);*/
             }
         }
     }
